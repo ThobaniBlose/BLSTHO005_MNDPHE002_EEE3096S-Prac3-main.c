@@ -61,6 +61,7 @@ TIM_HandleTypeDef htim16;
 
 // TODO: Define input variables
 
+uint16_t start_address = 0x00; // Starting address in EEPROM
 static uint8_t led7_toggle_freq = 2; // Default frequency is 2 Hz
 static uint32_t last_button_press = 0; // Timestamp for debouncing
 static uint8_t Array[6] = {0b10101010, 0b01010101, 0b11001100, 0b00110011, 0b11110000, 0b00001111};
@@ -142,6 +143,9 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3); // Start PWM on TIM3 Channel 3
 
   // TODO: Write all bytes to EEPROM using "write_to_address"
+      for (uint8_t i = 0; i < sizeof(Array); i++) {
+          write_to_address(start_address + i, Array[i]);
+      }
   
   
   /* USER CODE END 2 */
@@ -494,7 +498,7 @@ void TIM16_IRQHandler(void)
 
 	// TODO: Change LED pattern; output 0x01 if the read SPI data is incorrect
 	
-  
+
 
 }
 
@@ -517,12 +521,10 @@ uint32_t pollADC(void){
 // Calculate PWM CCR value
 uint32_t ADCtoCCR(uint32_t adc_val){
   // TODO: Calculate CCR value (val) using an appropriate equation
-
     // Convert 12-bit ADC value to 16-bit CCR value
     // Assuming ADC is configured for 12-bit resolution
     // and TIM3 is configured with ARR = 47999 (1 kHz PWM)
     return (adc_val * 47999) >> 12;
-
 	//return val;
 }
 
