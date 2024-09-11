@@ -495,18 +495,50 @@ void TIM16_IRQHandler(void)
 
 	// TODO: Initialise a string to output second line on LCD
 
+	static uint16_t eeprom_address = 0x00; // Starting address in EEPROM
+	uint8_t eeprom_value = read_from_address(eeprom_address);
+
+	// Prepare the string for LCD display
+	char lcd_buffer[16]; // Buffer for LCD display
+	sprintf(lcd_buffer, "EEPROM byte:\n%d", eeprom_value);
+
+	// Write the formatted string to the LCD
+	writeLCD(lcd_buffer);
 
 	// TODO: Change LED pattern; output 0x01 if the read SPI data is incorrect
 	
-
-
+	if (eeprom_value == 0xFF) { // Example condition for incorrect data
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // Turn on LED
+	}else {
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // Turn off LED
+	}
+	// Increment the EEPROM address for the next read
+	eeprom_address++;
 }
 
 // TODO: Complete the writeLCD function
 void writeLCD(char *char_in){
-  delay(3000);
+	// Clear the LCD
+	LCD_Clear(); // Assuming you have a function to clear the LCD
+
+	// Set the cursor to the first line
+	LCD_SetCursor(0, 0); // Move to the first line
+
+	// Write the first line
+	for (int i = 0; char_in[i] != '\0' && i < 16; i++) {
+		LCD_WriteData(char_in[i]); // Write character to LCD
+	}
+
+	// Set the cursor to the second line
+	LCD_SetCursor(1, 0); // Move to the second line
+
+	// Write the second line (assuming the string fits)
+	for (int i = 0; char_in[i] != '\0' && i < 16; i++) {
+		LCD_WriteData(char_in[i]); // Write character to LCD
+	}
 	
-  
+	// Add a delay to allow the user to read
+    delay(3000);
 }
 
 // Get ADC value
