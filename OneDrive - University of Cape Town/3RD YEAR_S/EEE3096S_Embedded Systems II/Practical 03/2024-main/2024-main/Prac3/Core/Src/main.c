@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "stm32f0xx.h"
 #include <lcd_stm32f0.c>
+#include "stm32f0xx_hal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,7 +63,7 @@ TIM_HandleTypeDef htim16;
 
 static uint8_t led7_toggle_freq = 2; // Default frequency is 2 Hz
 static uint32_t last_button_press = 0; // Timestamp for debouncing
-
+static void set_led7_frequency(void);
 
 /* USER CODE END PV */
 
@@ -133,6 +134,7 @@ int main(void)
   // Start timers
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim16);
+  set_led7_frequency();
 
   // PWM setup
   uint32_t CCR = 0;
@@ -150,6 +152,8 @@ int main(void)
 
 	// TODO: Poll ADC
 	uint32_t adc_value = pollADC(); // Get ADC value
+	uint32_t ccr_value = ADCtoCCR(adc_value); // Convert ADC value to CCR
+	TIM3->CCR3 = ccr_value; // Update the CCR for TIM3 Channel 3 (LED PB0)
 
 	// TODO: Get CRR
 	uint32_t CCR = ADCtoCCR(adc_value); // Calculate CCR from ADC value
@@ -162,6 +166,14 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+void set_led7_frequency(void) {
+    if (led7_toggle_freq == 2) {
+        htim6.Init.Period = 1000 - 1; // 1 Hz (1000 ms)
+    } else {
+        htim6.Init.Period = 500 - 1; // 2 Hz (500 ms)
+    }
+    HAL_TIM_Base_Init(&htim6); // Reinitialize the timer with the new period
 }
 
 /**
@@ -344,7 +356,7 @@ static void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 8000-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 500-1;
+  htim6.Init.Period = 1000-1;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
@@ -380,7 +392,7 @@ static void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 8000-1;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 1000-1;
+  htim16.Init.Period = 500-1;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -449,8 +461,16 @@ void EXTI0_1_IRQHandler(void)
 {
 	// TODO: Add code to switch LED7 delay frequency
 	
-  
-
+	// Check if the button press is valid for debouncing
+	if (HAL_GetTick() - last_button_press > 200) { // 200 ms debounce time
+		last_button_press = HAL_GetTick(); // Update the last press time
+		// Toggle the frequency between 1 Hz and 2 Hz
+		if (led7_toggle_freq == 2) {
+			led7_toggle_freq = 1; // Change to 1 Hz
+		} else {
+			led7_toggle_freq = 2; // Change to 2 Hz
+		}
+	}
 	HAL_GPIO_EXTI_IRQHandler(Button0_Pin); // Clear interrupt flags
 }
 
@@ -496,6 +516,11 @@ uint32_t pollADC(void){
 // Calculate PWM CCR value
 uint32_t ADCtoCCR(uint32_t adc_val){
   // TODO: Calculate CCR value (val) using an appropriate equation
+
+    // Convert 12-bit ADC value to 16-bit CCR value
+    // Assuming ADC is configured for 12-bit resolution
+    // and TIM3 is configured with ARR = 47999 (1 kHz PWM)
+    return (adc_val * 47999) >> 12;
 
 	//return val;
 }
