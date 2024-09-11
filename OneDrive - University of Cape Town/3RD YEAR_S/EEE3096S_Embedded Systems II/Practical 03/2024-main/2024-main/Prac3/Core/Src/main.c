@@ -63,6 +63,7 @@ TIM_HandleTypeDef htim16;
 
 static uint8_t led7_toggle_freq = 2; // Default frequency is 2 Hz
 static uint32_t last_button_press = 0; // Timestamp for debouncing
+static uint8_t Array[6] = {0b10101010, 0b01010101, 0b11001100, 0b00110011, 0b11110000, 0b00001111};
 static void set_led7_frequency(void);
 
 /* USER CODE END PV */
