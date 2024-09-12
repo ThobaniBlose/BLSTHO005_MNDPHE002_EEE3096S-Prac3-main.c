@@ -61,6 +61,7 @@ TIM_HandleTypeDef htim16;
 
 // TODO: Define input variables
 
+
 uint16_t start_address = 0x00; // Starting address in EEPROM
 static uint8_t led7_toggle_freq = 2; // Default frequency is 2 Hz
 static uint32_t last_button_press = 0; // Timestamp for debouncing
@@ -500,7 +501,7 @@ void TIM16_IRQHandler(void)
 
 	// Prepare the string for LCD display
 	char lcd_buffer[16]; // Buffer for LCD display
-	sprintf(lcd_buffer, "EEPROM byte:\n%d", eeprom_value);
+	snprintf(lcd_buffer, "EEPROM byte:\n%d", eeprom_value);
 
 	// Write the formatted string to the LCD
 	writeLCD(lcd_buffer);
@@ -518,11 +519,8 @@ void TIM16_IRQHandler(void)
 
 // TODO: Complete the writeLCD function
 void writeLCD(char *char_in){
-	// Clear the LCD
-	LCD_Clear(); // Assuming you have a function to clear the LCD
 
-	// Set the cursor to the first line
-	LCD_SetCursor(0, 0); // Move to the first line
+	lcd_command(CLEAR); // Clear the LCD before writing
 
 	// Write the first line
 	for (int i = 0; char_in[i] != '\0' && i < 16; i++) {
